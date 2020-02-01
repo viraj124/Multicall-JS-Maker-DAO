@@ -1,7 +1,7 @@
 {
-  "name": "oasis-dex-connector",
+  "name": "multicall_js",
   "version": "0.1.0",
-  "description": "An Oasis Dex Connector",
+  "description": "Multicall JS for Compound",
   "author": "virajm72@gmail.com",
   "dependencies": {
     "@openzeppelin/contracts": "^2.4.0",
