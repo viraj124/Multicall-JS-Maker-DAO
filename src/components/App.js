@@ -6,9 +6,9 @@ const ethers = require('ethers')
 const utils = ethers.utils
 
 const add = {}
-add["MULTICALL"] = "0x2cc8688c5f75e365aaeeb4ea8d6a480405a48d2a"
-add["CDAI"] = "0xe7bc397dbd069fc7d0109c0636d06888bb50668c"
-add["Comptroller"] = "0x1f5d7f3caac149fe41b8bd62a3673fe6ec0ab73b"
+add["MULTICALL"] = "0xeefBa1e63905eF1D7ACbA5a8513c70307C1cE441"
+add["INSTACOMPOUND"] = "0x2699fC3753B1036534FEb3bE8704c9c5e3262606"
+
 
 let provider;
 if (typeof window.ethereum !== 'undefined') {
@@ -26,55 +26,114 @@ const build = (address, name) => {
 }
 
 const multi = build(add.MULTICALL, "Multicall")
-const cdai = build(add.CDAI, "cdai")
-const comptroller = build(add.Comptroller, "comptroller")
-const myAddress = "0xc19c5f0ecf68be63937cd1e9a43b4b4b19629c0f"
-window.utils = utils
-window.cdai = cdai
-window.multi = multi
-window.comptroller = comptroller
+const instacompound = build(add.INSTACOMPOUND, "instacompound")
 
+// const myAddress = "0xa7615CD307F323172331865181DC8b80a2834324"
+// const cdai = "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
+
+
+window.utils = utils
+window.multi = multi
+window.instacompound = instacompound
 
 class App extends Component {
-  async componentWillMount() {
-    this.all()
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      tokenPrice: '',
+      exchangeRateCurrent: '',
+      balanceOfUser: '',
+      balanceOfWallet: '',
+      borrowBalanceCurrentUser: '',
+      borrowBalanceCurrentWallet: '',
+      supplyRatePerBlock: '',
+      borrowRatePerBlock: ''
+    }
+    this.all = this.all.bind(this);
   }
+
+  // async componentWillMount() {
+  //   this.all()
+  // }
+ 
   //This is for all read function of CDAI, as you kn ow all CTOKEN read functions return only one parameter, but if there are mutiple params returned we would need to use the decode function in the utils library(Just an FYI)
-  all = async () => {
+  all = async (user, ctoken) => {
     let p1 = multi.aggregate([
-      [add.CDAI, cdai.interface.functions.getCash.encode([])],
-      [add.CDAI, cdai.interface.functions.totalBorrowsCurrent.encode([])],
-      [add.CDAI, cdai.interface.functions.borrowBalanceCurrent.encode([myAddress])],
-      [add.CDAI, cdai.interface.functions.borrowRatePerBlock.encode([])],
-      [add.CDAI, cdai.interface.functions.totalSupply.encode([])],
-      [add.CDAI, cdai.interface.functions.balanceOfUnderlying.encode([myAddress])],
-      [add.CDAI, cdai.interface.functions.supplyRatePerBlock.encode([])],
-      [add.CDAI, cdai.interface.functions.totalReserves.encode([])],
-      [add.CDAI, cdai.interface.functions.reserveFactorMantissa.encode([])],
-      [add.Comptroller, comptroller.interface.functions.getAccountLiquidity.encode([myAddress])]
+      [add.INSTACOMPOUND, instacompound.interface.functions.getCompTokenData.encode([user, [ctoken]])],
+      [add.INSTACOMPOUND, instacompound.interface.functions.getTokenData.encode([user, ctoken])]
     ])
     let [res] = await Promise.all([p1])
     res = res[1]
-    console.log("GET_CASH", utils.formatUnits(res[0], 9))
-    console.log("TOTAL_BORROWS", utils.formatUnits(res[1], 9))
-    console.log("BORROW_BALANCE_CURRENT", utils.formatUnits(res[2], 9))
-    console.log("BORROW_RATE", utils.formatUnits(res[3], 9))
-    console.log("TOTAL_SUPPLY", utils.formatUnits(res[4], 9))
-    console.log("BALANCE_UNDERLYING", utils.formatUnits(res[5], 9))
-    console.log("SUPPLY_RATE", utils.formatUnits(res[6], 9))
-    console.log("TOTAL_RESERVE", utils.formatUnits(res[7], 9))
-    console.log("RESERVE_FACTOR", utils.formatUnits(res[8], 9))
-    //Using the COMPTROLLER GET FUNCTIONS FOR SHOWING MULTI PARAM GETTING RETURNED FROM READ FUNCTION
-    const decodeResult = comptroller.interface.functions.getAccountLiquidity.decode(res[9])
-    console.log("LIQUIDITY", utils.formatUnits(decodeResult[1], 9))
-    console.log("SHORTFALL", utils.formatUnits(decodeResult[2], 9))
+    //NOTE -> Capturing Only Token Data Result in state since the output params are same
+    const decodeCompTokenResult = instacompound.interface.functions.getCompTokenData.decode(res[0])
+    const decodeTokenResult = instacompound.interface.functions.getTokenData.decode(res[1])
+    this.setState({
+      tokenPrice: utils.formatUnits(decodeTokenResult[0], 9),
+      exchangeRateCurrent: utils.formatUnits(decodeTokenResult[1], 9),
+      balanceOfUser: utils.formatUnits(decodeTokenResult[2], 9),
+      balanceOfWallet: utils.formatUnits(decodeTokenResult[3], 9),
+      borrowBalanceCurrentUser: utils.formatUnits(decodeTokenResult[4], 9),
+      borrowBalanceCurrentWallet: utils.formatUnits(decodeTokenResult[5], 9),
+      supplyRatePerBlock: utils.formatUnits(decodeTokenResult[6], 9),
+      borrowRatePerBlock: utils.formatUnits(decodeTokenResult[7], 9)
+    })
   }
 
 
   render() {
     return (
       <div>
-        Multicall JS
+        <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
+          <a
+            className="navbar-brand col-sm-3 col-md-2 mr-0"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            InstaCompound Multicall
+          </a>
+        </nav>
+        <div className="container-fluid mt-5">
+          <div className="row">
+            <main role="main" className="col-lg-12 d-flex text-center">
+              <div className="content mr-auto ml-auto">
+                <h1>Multicall</h1>
+                <form onSubmit={(event) => {
+                  event.preventDefault()
+                  const ctoken = this.ctoken.value
+                  const user = this.user.value
+                  this.all(user, ctoken)
+                }}>
+                  <input
+                    type='text'
+                    className='form-control mb-1'
+                    placeholder='Enter User Address'
+                    ref={(input) => { this.user = input }}
+                  />
+                   <input
+                    type='text'
+                    className='form-control mb-1'
+                    placeholder='Enter CTOKEN Address'
+                    ref={(input) => { this.ctoken = input }}
+                  />
+                  <input
+                    type='submit'
+                    className='btn btn-block btn-primary'
+                    value='READ CTOKEN'
+                  />
+                </form>
+                <h3>Token Price: {this.state.tokenPrice}</h3>
+                <h3>Exchange Rate: {this.state.exchangeRateCurrent}</h3>
+                <h3>User Balance: {this.state.balanceOfUser}</h3>
+                <h3>Wallet Balance: {this.state.balanceOfWallet}</h3>
+                <h3>Borrow Balance Current: {this.state.borrowBalanceCurrentWallet}</h3>
+                <h3>Wallet Balance Current: {this.state.borrowBalanceCurrentWallet}</h3>
+                <h3>Supply Rate: {this.state.supplyRatePerBlock}</h3>
+                <h3>Borrow Rate: {this.state.borrowRatePerBlock}</h3>
+              </div>
+            </main>
+          </div>
+        </div>
       </div>
     );
   }
