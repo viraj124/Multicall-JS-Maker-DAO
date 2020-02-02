@@ -27,7 +27,7 @@ const build = (address, name) => {
 
 const multi = build(add.MULTICALL, "Multicall")
 const instacompound = build(add.INSTACOMPOUND, "instacompound")
-
+// Was Using for testing
 // const myAddress = "0xa7615CD307F323172331865181DC8b80a2834324"
 // const cdai = "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
 
@@ -53,11 +53,6 @@ class App extends Component {
     this.all = this.all.bind(this);
   }
 
-  // async componentWillMount() {
-  //   this.all()
-  // }
- 
-  //This is for all read function of CDAI, as you kn ow all CTOKEN read functions return only one parameter, but if there are mutiple params returned we would need to use the decode function in the utils library(Just an FYI)
   all = async (user, ctoken) => {
     let p1 = multi.aggregate([
       [add.INSTACOMPOUND, instacompound.interface.functions.getCompTokenData.encode([user, [ctoken]])],
