@@ -61,8 +61,14 @@ class App extends Component {
     let p1 = multi.aggregate([
       [add.INSTACOMPOUND, instacompound.interface.functions.getCompTokenData.encode([user, [ctoken]])],
       [add.INSTACOMPOUND, instacompound.interface.functions.getTokenData.encode([user, ctoken])],
-      [add.UNISWAPFACTORY, uniswapfactory.interface.functions.getExchange.encode([dai])
-      [add.UNISWAPFACTORY, uniswapfactory.interface.functions.getToken.encode(add.UNISWAPDAIEXCHANGE)]
+      [add.UNISWAPFACTORY, uniswapfactory.interface.functions.getExchange.encode(dai)],
+      [add.UNISWAPFACTORY, uniswapfactory.interface.functions.getToken.encode(add.UNISWAPDAIEXCHANGE)],
+      [add.UNISWAPDAIEXCHANGE, uniswapfactory.interface.functions.tokenAddress.encode()],
+      [add.UNISWAPDAIEXCHANGE, uniswapfactory.interface.functions.factoryAddress.encode()],
+      [add.UNISWAPDAIEXCHANGE, uniswapfactory.interface.functions.getEthToTokenInputPrice.encode(amount)],
+      [add.UNISWAPDAIEXCHANGE, uniswapfactory.interface.functions.getEthToTokenOutputPrice.encode(amount)],
+      [add.UNISWAPDAIEXCHANGE, uniswapfactory.interface.functions.getTokenToEthInputPrice.encode(amount)],
+      [add.UNISWAPDAIEXCHANGE, uniswapfactory.interface.functions.getTokenToEthOutputPrice.encode(amount)]
     ])
     let [res] = await Promise.all([p1])
     res = res[1]
