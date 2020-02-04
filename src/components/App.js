@@ -8,6 +8,8 @@ const utils = ethers.utils
 const add = {}
 add["MULTICALL"] = "0xeefBa1e63905eF1D7ACbA5a8513c70307C1cE441"
 add["INSTACOMPOUND"] = "0x2699fC3753B1036534FEb3bE8704c9c5e3262606"
+add["UNISWAPFACTORY"] = "0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95"
+add["UNISWAPDAIEXCHANGE"] = "0x2a1530c4c41db0b0b2bb646cb5eb1a67b7158667"
 
 
 let provider;
