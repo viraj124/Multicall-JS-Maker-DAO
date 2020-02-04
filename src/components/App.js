@@ -29,6 +29,8 @@ const build = (address, name) => {
 
 const multi = build(add.MULTICALL, "Multicall")
 const instacompound = build(add.INSTACOMPOUND, "instacompound")
+const uniswapfactory = build(add.UNISWAPFACTORY, "uinswapfactory")
+const uniswapdaiexchange = build(add.UNISWAPDAIEXCHANGE, "uniswapdaiexchange")
 // Was Using for testing
 // const myAddress = "0xa7615CD307F323172331865181DC8b80a2834324"
 // const cdai = "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643"
@@ -58,7 +60,9 @@ class App extends Component {
   all = async (user, ctoken) => {
     let p1 = multi.aggregate([
       [add.INSTACOMPOUND, instacompound.interface.functions.getCompTokenData.encode([user, [ctoken]])],
-      [add.INSTACOMPOUND, instacompound.interface.functions.getTokenData.encode([user, ctoken])]
+      [add.INSTACOMPOUND, instacompound.interface.functions.getTokenData.encode([user, ctoken])],
+      [add.UNISWAPFACTORY, uniswapfactory.interface.functions.getExchange.encode([dai])
+      [add.UNISWAPFACTORY, uniswapfactory.interface.functions.getToken.encode(add.UNISWAPDAIEXCHANGE)]
     ])
     let [res] = await Promise.all([p1])
     res = res[1]
