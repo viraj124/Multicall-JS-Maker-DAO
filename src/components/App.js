@@ -4,11 +4,7 @@ import './App.css';
 import Compound from './Compound/compound.component'
 import Uniswap from './Uniswap/uniswap.component';
 
-
 class App extends Component {
-
-
-
 
   render() {
     return (
