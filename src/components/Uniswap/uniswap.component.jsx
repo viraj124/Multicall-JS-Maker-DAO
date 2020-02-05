@@ -9,6 +9,7 @@ const utils = ethers.utils
 const add = {}
 add["MULTICALL"] = "0xeefBa1e63905eF1D7ACbA5a8513c70307C1cE441"
 add["UNISWAPFACTORY"] = "0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95"
+//Using DAI Exchange for now we can make it dynamic later
 add["UNISWAPDAIEXCHANGE"] = "0x2a1530c4c41db0b0b2bb646cb5eb1a67b7158667"
 
 
@@ -71,12 +72,12 @@ class Compound extends Component {
       exchange: uniswapfactory.interface.functions.getExchange.decode(res[0]),
       token: uniswapfactory.interface.functions.getToken.decode(res[1]),
       factory: uniswapdaiexchange.interface.functions.factoryAddress.decode(res[2]),
-      tokens_bought: uniswapdaiexchange.interface.functions.getEthToTokenInputPrice.decode(res[3]),
-      eth_sold: uniswapdaiexchange.interface.functions.getEthToTokenOutputPrice.decode(res[4]),
-      eth_bought: uniswapdaiexchange.interface.functions.getTokenToEthInputPrice.decode(res[5]),
-      tokens_sold: uniswapdaiexchange.interface.functions.getTokenToEthOutputPrice.decode(res[6])
+      tokens_bought: utils.formatUnits(uniswapdaiexchange.interface.functions.getEthToTokenInputPrice.decode(res[3]), 9),
+      eth_sold: utils.formatUnits(uniswapdaiexchange.interface.functions.getEthToTokenOutputPrice.decode(res[4]), 9),
+      eth_bought: utils.formatUnits(uniswapdaiexchange.interface.functions.getTokenToEthInputPrice.decode(res[5]), 9),
+      tokens_sold: utils.formatUnits(uniswapdaiexchange.interface.functions.getTokenToEthOutputPrice.decode(res[6])[0], 9) 
       })
-    console.log(this.state)
+      console.log(this.state.tokens_sold)
   }
 
 
@@ -138,10 +139,10 @@ class Compound extends Component {
                 <h3>Exchange: {this.state.exchange.out}</h3>
                 <h3>Factory: {this.state.factory.out}</h3>
                 <h3>Token: {this.state.token.out}</h3>
-                {/* /*<h3>Tokens Brought: {this.state.tokens_bought}</h3>
+                <h3>Tokens Brought: {this.state.tokens_bought}</h3>
                 <h3>ETH Sold: {this.state.eth_sold}</h3>
                 <h3>Tokens Sold: {this.state.tokens_sold}</h3>
-              <h3>ETH Brought: {this.state.eth_bought}</h3> */}
+                <h3>ETH Brought: {this.state.eth_bought}</h3> 
               </div>
             </main>
           </div>
