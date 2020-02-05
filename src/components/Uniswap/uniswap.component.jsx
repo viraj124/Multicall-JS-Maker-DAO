@@ -30,7 +30,7 @@ const build = (address, name) => {
 const dai = "0x6b175474e89094c44da98b954eedeac495271d0f";
 const multi = build(add.MULTICALL, "Multicall")
 const uniswapfactory = build(add.UNISWAPFACTORY, "uinswapfactory")
-const uniswapdaiexchange = build(add.UNISWAPDAIEXCHANGE, "uniswapdaiexchange")
+const uniswapdaiexchange = build(add.UNISWAPDAIEXCHANGE, "uniswapexchange")
 
 
 
@@ -77,7 +77,6 @@ class Compound extends Component {
       eth_bought: utils.formatUnits(uniswapdaiexchange.interface.functions.getTokenToEthInputPrice.decode(res[5]), 9),
       tokens_sold: utils.formatUnits(uniswapdaiexchange.interface.functions.getTokenToEthOutputPrice.decode(res[6])[0], 9) 
       })
-      console.log(this.state.tokens_sold)
   }
 
 
