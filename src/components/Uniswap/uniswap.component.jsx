@@ -11,6 +11,7 @@ add["MULTICALL"] = "0xeefBa1e63905eF1D7ACbA5a8513c70307C1cE441"
 add["UNISWAPFACTORY"] = "0xc0a47dFe034B400B47bDaD5FecDa2621de6c4d95"
 //Using DAI Exchange for now we can make it dynamic later
 add["UNISWAPEXCHANGE"] = "0x2a1530c4c41db0b0b2bb646cb5eb1a67b7158667"
+add["TOKEN"] = "0x6b175474e89094c44da98b954eedeac495271d0f"
 
 
 let provider;
@@ -32,6 +33,7 @@ const multi = build(add.MULTICALL, "Multicall")
 const uniswapfactory = build(add.UNISWAPFACTORY, "uinswapfactory")
 const uniswapexchange = build(add.UNISWAPEXCHANGE, "uniswapexchange")
 //Just For Testing For Now
+const token = build(add.TOKEN, "token")
 const liquidityProviderAddress = "0x79317fc0fb17bc0ce213a2b50f343e4d4c277704"
 
 
@@ -39,6 +41,7 @@ window.utils = utils
 window.multi = multi
 window.uniswapfactory = uniswapfactory
 window.uniswapexchange = uniswapexchange
+window.token = token
 
 class Compound extends Component {
 
@@ -53,12 +56,16 @@ class Compound extends Component {
       eth_bought: '',
       tokens_sold: '',
       shareAmount: '',
-      totalReserveAmount: ''
+      totalReserveAmount: '',
+      ethDeposited: '',
+      tokenDeposited: ''
     }
     this.all = this.all.bind(this);
   }
 
   all = async (eth_sold, tokens_bought, tokens_sold, eth_bought) => {
+    let ethReserve = await provider.getBalance(add.UNISWAPEXCHANGE)
+    console.log(ethReserve)
     let p1 = multi.aggregate([
       [add.UNISWAPFACTORY, uniswapfactory.interface.functions.getExchange.encode([dai])],
       [add.UNISWAPFACTORY, uniswapfactory.interface.functions.getToken.encode([add.UNISWAPEXCHANGE])],
@@ -68,7 +75,8 @@ class Compound extends Component {
       [add.UNISWAPEXCHANGE, uniswapexchange.interface.functions.getTokenToEthInputPrice.encode([tokens_sold])],
       [add.UNISWAPEXCHANGE, uniswapexchange.interface.functions.getTokenToEthOutputPrice.encode([eth_bought])],
       [add.UNISWAPEXCHANGE, uniswapexchange.interface.functions.balanceOf.encode([liquidityProviderAddress])],
-      [add.UNISWAPEXCHANGE, uniswapexchange.interface.functions.totalSupply.encode([])]
+      [add.UNISWAPEXCHANGE, uniswapexchange.interface.functions.totalSupply.encode([])],
+      [add.TOKEN, token.interface.functions.balanceOf.encode([add.UNISWAPEXCHANGE])]
     ])
     let [res] = await Promise.all([p1])
     res = res[1]
@@ -76,16 +84,27 @@ class Compound extends Component {
       exchange: uniswapfactory.interface.functions.getExchange.decode(res[0]),
       token: uniswapfactory.interface.functions.getToken.decode(res[1]),
       factory: uniswapexchange.interface.functions.factoryAddress.decode(res[2]),
-      tokens_bought: utils.formatUnits(uniswapexchange.interface.functions.getEthToTokenInputPrice.decode(res[3])[0]['_hex'], 9),
-      eth_sold: utils.formatUnits(uniswapexchange.interface.functions.getEthToTokenOutputPrice.decode(res[4])[0]['_hex'], 9),
-      eth_bought: utils.formatUnits(uniswapexchange.interface.functions.getTokenToEthInputPrice.decode(res[5])[0]['_hex'], 9),
-      tokens_sold: utils.formatUnits(uniswapexchange.interface.functions.getTokenToEthOutputPrice.decode(res[6])[0]['_hex'], 9),
-      shareAmount: utils.formatUnits(uniswapexchange.interface.functions.balanceOf.decode(res[7])[0]['_hex'], 9)
+      tokens_bought: utils.formatEther(uniswapexchange.interface.functions.getEthToTokenInputPrice.decode(res[3])[0]['_hex']),
+      eth_sold: utils.formatEther(uniswapexchange.interface.functions.getEthToTokenOutputPrice.decode(res[4])[0]['_hex']),
+      eth_bought: utils.formatEther(uniswapexchange.interface.functions.getTokenToEthInputPrice.decode(res[5])[0]['_hex']),
+      tokens_sold: utils.formatEther(uniswapexchange.interface.functions.getTokenToEthOutputPrice.decode(res[6])[0]['_hex']),
+      shareAmount: utils.formatEther(uniswapexchange.interface.functions.balanceOf.decode(res[7])[0]['_hex']),
+      totalReserveAmount: utils.formatEther(uniswapexchange.interface.functions.totalSupply.decode(res[8])[0]['_hex']),
       })
+  
+      //Calculation of ETH & Token Deposited by the user
+      let bigNumberShareAmt = utils.parseEther(this.state.shareAmount)
+      let bigNumberTotalReserve = utils.parseEther(this.state.totalReserveAmount)
+      let ethDeposited = bigNumberShareAmt.mul(ethReserve).div(bigNumberTotalReserve)
+
+      let tokenPool = utils.formatEther(token.interface.functions.balanceOf.decode(res[9])[0]['_hex'])
+      let bigNumberTokenPool = utils.parseEther(tokenPool)
+      let tokenDeposited = bigNumberTokenPool.mul(ethDeposited).div(ethReserve)
       this.setState({
-        totalReserveAmount: utils.formatUnits(uniswapexchange.interface.functions.totalSupply.decode(res[8])[0]['_hex'], 9)
+        ethDeposited: utils.formatEther(ethDeposited),
+        tokenDeposited: utils.formatEther(tokenDeposited)
       })
-  }
+      }
 
 
   render() {
@@ -152,6 +171,8 @@ class Compound extends Component {
                 <h3>ETH Brought: {this.state.eth_bought}</h3> 
                 <h3>Your Share: {this.state.shareAmount}</h3>
                 <h3>Total Reserve Amount: {this.state.totalReserveAmount}</h3>
+                <h3>ETH Deposited: {this.state.ethDeposited}</h3>
+                <h3>Token Deposited: {this.state.tokenDeposited}</h3>
               </div>
             </main>
           </div>
